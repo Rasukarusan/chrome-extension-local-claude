@@ -76,25 +76,6 @@
       color: #999;
     }
 
-    .copy-btn {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 13px;
-      margin-top: 10px;
-    }
-
-    .copy-btn:hover {
-      background-color: #45a049;
-    }
-
-    .copy-btn:active {
-      background-color: #3d8b40;
-    }
-
     .timestamp {
       font-size: 11px;
       color: #999;
@@ -127,6 +108,107 @@
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+
+    /* チャット欄 */
+    .chat-section {
+      margin-top: 20px;
+      border-top: 2px solid #e0e0e0;
+      padding-top: 15px;
+    }
+
+    .chat-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    .chat-messages {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #fafafa;
+      border-radius: 4px;
+    }
+
+    .chat-message {
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 90%;
+    }
+
+    .chat-message.user {
+      background-color: #e3f2fd;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .chat-message.assistant {
+      background-color: #e8f5e9;
+      margin-right: auto;
+    }
+
+    .chat-message-role {
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #666;
+    }
+
+    .chat-message-content {
+      font-size: 13px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .chat-input-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+
+    .chat-send-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .chat-send-btn:hover {
+      background-color: #45a049;
+    }
+
+    .chat-send-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .chat-loading {
+      text-align: center;
+      padding: 10px;
+      color: #666;
+      font-size: 13px;
     }
   </style>
 </head>

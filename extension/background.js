@@ -41,12 +41,18 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       const data = await response.json();
 
       if (data.success) {
-        // 結果をストレージに保存（ポップアップが自動更新される）
+        // 結果をメッセージ履歴として保存（ポップアップが自動更新される）
+        const messages = [
+          { role: 'user', content: `以下の文章を推敲してください:\n${selectedText}` },
+          { role: 'assistant', content: data.result }
+        ];
+
         await chrome.storage.local.set({
           proofreadResult: data.result,
           originalText: selectedText,
           timestamp: Date.now(),
-          isLoading: false
+          isLoading: false,
+          messages: messages
         });
       } else {
         console.error('Proofread failed:', data.error);
@@ -75,6 +81,51 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.storage.local.get(['proofreadResult', 'originalText', 'timestamp'], (data) => {
       sendResponse(data);
     });
+    return true; // 非同期レスポンスを示す
+  }
+
+  // チャットメッセージ送信ハンドラ
+  if (request.action === 'sendChatMessage') {
+    (async () => {
+      try {
+        const { message, messages, originalText } = request;
+
+        // 新しいメッセージを履歴に追加
+        const updatedMessages = [...messages, { role: 'user', content: message }];
+
+        // サーバーにリクエスト
+        const response = await fetch('http://localhost:8080/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messages: updatedMessages,
+            originalText: originalText
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // アシスタントの返答を履歴に追加
+          updatedMessages.push({ role: 'assistant', content: data.result });
+
+          // ストレージを更新
+          await chrome.storage.local.set({
+            messages: updatedMessages,
+            timestamp: Date.now()
+          });
+
+          sendResponse({ success: true, result: data.result });
+        } else {
+          sendResponse({ success: false, error: data.error });
+        }
+      } catch (error) {
+        console.error('Error sending chat message:', error);
+        sendResponse({ success: false, error: error.message });
+      }
+    })();
     return true; // 非同期レスポンスを示す
   }
 });
