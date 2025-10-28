@@ -117,12 +117,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const data = await response.json();
 
         if (data.success) {
-          // アシスタントの返答を履歴に追加
-          updatedMessages.push({ role: 'assistant', content: data.result });
+          // ストレージから最新のメッセージ配列を取得（ユーザーメッセージ + ローディングメッセージが含まれている）
+          const storageData = await chrome.storage.local.get(['messages']);
+          const currentMessages = storageData.messages || [];
+
+          // ローディングメッセージ（isLoading: true）を除外して、実際のレスポンスを追加
+          const finalMessages = currentMessages.filter(msg => !msg.isLoading);
+          finalMessages.push({ role: 'assistant', content: data.result });
 
           // ストレージを更新
           await chrome.storage.local.set({
-            messages: updatedMessages,
+            messages: finalMessages,
             timestamp: Date.now()
           });
 
