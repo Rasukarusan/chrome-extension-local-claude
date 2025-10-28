@@ -33,17 +33,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       // ローディング中の表示
       if (isLoading) {
         contentDiv.innerHTML = `
-          <div class="section">
-            <div class="section-title">元のテキスト:</div>
-            <div class="original-text">${escapeHtml(originalText)}</div>
+          <div class="original-text-section">
+            <div class="original-text-label">📝 元のテキスト</div>
+            <div class="original-text-content">${escapeHtml(originalText)}</div>
           </div>
 
-          <div class="section">
-            <div class="section-title">推敲中...</div>
-            <div class="loading-animation">
-              <div class="spinner"></div>
-              <p>Claudeが推敲中です。しばらくお待ちください...</p>
-            </div>
+          <div class="loading-animation">
+            <div class="spinner"></div>
+            <p>Claudeが推敲中です。しばらくお待ちください...</p>
           </div>
         `;
         return;
@@ -66,6 +63,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         ${renderAllMessages(messages, isError)}
       `;
 
+      // 自動的に下にスクロール
+      setTimeout(() => {
+        contentDiv.scrollTop = contentDiv.scrollHeight;
+      }, 50);
+
       // チャット入力エリアを表示
       const chatInputArea = document.getElementById('chatInputArea');
       const chatInput = document.getElementById('chatInput');
@@ -82,6 +84,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // 入力欄をクリア（即座に）
             chatInput.value = '';
+
+            // ユーザーメッセージとローディング表示をすぐにストレージに追加（即座に表示）
+            const updatedMessages = [...messages,
+              { role: 'user', content: message },
+              { role: 'assistant', content: '考え中...', isLoading: true }
+            ];
+            await chrome.storage.local.set({
+              messages: updatedMessages,
+              timestamp: Date.now()
+            });
 
             // ボタンを無効化
             chatSendBtn.disabled = true;
@@ -162,6 +174,19 @@ function renderAllMessages(messages, isError) {
     }
 
     const roleLabel = msg.role === 'user' ? 'あなた' : 'Claude';
+
+    // ローディング中の場合はスピナーを表示
+    if (msg.isLoading) {
+      return `
+        <div class="chat-message ${msg.role}">
+          <div class="chat-message-role">${roleLabel}</div>
+          <div class="chat-message-bubble" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
+            <div class="spinner" style="width: 20px; height: 20px; border-width: 2px; flex-shrink: 0;"></div>
+            <span style="font-size: 13px; color: #666;">考え中...</span>
+          </div>
+        </div>
+      `;
+    }
 
     return `
       <div class="chat-message ${msg.role}">
