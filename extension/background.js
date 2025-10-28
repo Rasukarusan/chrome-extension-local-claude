@@ -7,6 +7,15 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+// ページがリロードされたときにストレージをクリア
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  // ページのリロードが完了したとき（status: 'loading' → 'complete'）
+  if (changeInfo.status === 'loading') {
+    chrome.storage.local.clear();
+    console.log('[BACKGROUND] Page reloaded, storage cleared');
+  }
+});
+
 // コンテキストメニューがクリックされた時の処理
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'ai-proofread') {

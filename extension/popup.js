@@ -56,40 +56,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       const date = new Date(timestamp);
       const formattedDate = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 
+      // 元のテキストセクション + チャット履歴
       contentDiv.innerHTML = `
-        <div class="section">
-          <div class="section-title">元のテキスト:</div>
-          <div class="original-text">${escapeHtml(originalText)}</div>
+        <div class="original-text-section">
+          <div class="original-text-label">📝 元のテキスト</div>
+          <div class="original-text-content">${escapeHtml(originalText)}</div>
         </div>
 
-        <div class="section">
-          <div class="section-title">推敲結果:</div>
-          <div class="result-text ${isError ? 'error' : ''}">${escapeHtml(proofreadResult)}</div>
-        </div>
-
-        ${!isError && messages ? `
-          <div class="chat-section">
-            <div class="chat-messages" id="chatMessages">
-              ${renderChatMessages(messages)}
-            </div>
-            <div class="chat-input-container">
-              <input type="text" class="chat-input" id="chatInput" placeholder="例: もっと短くして、もっと丁寧に、など...">
-              <button class="chat-send-btn" id="chatSendBtn">送信</button>
-            </div>
-          </div>
-        ` : ''}
-
-        <div class="timestamp">取得日時: ${formattedDate}</div>
+        ${renderAllMessages(messages, isError)}
       `;
 
-      // チャット送信ボタンのイベントリスナー
-      if (!isError) {
-        const chatSendBtn = document.getElementById('chatSendBtn');
-        const chatInput = document.getElementById('chatInput');
-        if (chatSendBtn && chatInput) {
+      // チャット入力エリアを表示
+      const chatInputArea = document.getElementById('chatInputArea');
+      const chatInput = document.getElementById('chatInput');
+      const chatSendBtn = document.getElementById('chatSendBtn');
+
+      if (!isError && messages && chatInputArea) {
+        chatInputArea.style.display = 'block';
+
+        // チャット送信ボタンのイベントリスナー
+        if (chatInput && chatSendBtn) {
           const sendMessage = async () => {
             const message = chatInput.value.trim();
             if (!message) return;
+
+            // 入力欄をクリア（即座に）
+            chatInput.value = '';
 
             // ボタンを無効化
             chatSendBtn.disabled = true;
@@ -105,10 +97,9 @@ document.addEventListener('DOMContentLoaded', async () => {
               });
 
               if (response.success) {
-                // 入力欄をクリア
-                chatInput.value = '';
+                // 成功時は何もしない（ストレージ更新で自動的にUIが更新される）
               } else {
-                alert('エラー: ' + response.error);
+                alert('エラー: ' + (response.error || '送信に失敗しました'));
               }
             } catch (error) {
               console.error('Failed to send message:', error);
@@ -127,6 +118,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           });
         }
+      } else if (chatInputArea) {
+        chatInputArea.style.display = 'none';
       }
     } catch (error) {
       console.error('Error loading result:', error);
@@ -147,10 +140,19 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// チャットメッセージをレンダリングする関数
-function renderChatMessages(messages) {
-  if (!messages || messages.length === 0) {
-    return '<p style="text-align: center; color: #999;">会話履歴がありません</p>';
+// 全メッセージを統一フォーマットでレンダリングする関数
+function renderAllMessages(messages, isError) {
+  if (isError) {
+    return `<div class="chat-message assistant">
+      <div class="chat-message-role">Claude</div>
+      <div class="chat-message-bubble" style="background-color: #ffebee; color: #c62828;">
+        ${escapeHtml(messages && messages[1] ? messages[1].content : 'エラーが発生しました')}
+      </div>
+    </div>`;
+  }
+
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return '<p style="text-align: center; color: #999; padding: 40px;">会話履歴がありません</p>';
   }
 
   return messages.map((msg, index) => {
@@ -158,16 +160,13 @@ function renderChatMessages(messages) {
     if (index === 0 && msg.role === 'user') {
       return '';
     }
-    // 最初のアシスタントメッセージ（推敲結果）もスキップ（上部に表示済み）
-    if (index === 1 && msg.role === 'assistant') {
-      return '';
-    }
 
     const roleLabel = msg.role === 'user' ? 'あなた' : 'Claude';
+
     return `
       <div class="chat-message ${msg.role}">
         <div class="chat-message-role">${roleLabel}</div>
-        <div class="chat-message-content">${escapeHtml(msg.content)}</div>
+        <div class="chat-message-bubble">${escapeHtml(msg.content)}</div>
       </div>
     `;
   }).join('');
