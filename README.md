@@ -2,6 +2,10 @@
 
 選択したテキストをローカルのClaude CLIを使って自動推敲するChrome拡張機能です。
 
+
+https://github.com/user-attachments/assets/f59a0a0a-0bc3-4527-a207-aaef4466dde5
+
+
 ## 機能
 
 - ブラウザ上のテキストを選択して右クリック
