@@ -124,7 +124,7 @@ app.post('/chat', async (req, res) => {
     await fs.writeFile(inputFile, conversationContext, 'utf-8');
 
     // Claude CLIを実行
-    const command = `cat "${inputFile}" | claude`;
+    const command = `cat "${inputFile}" | claude --model haiku`;
 
     console.log('Executing Claude CLI for chat...');
     const {stdout, stderr} = await execAsync(command, {
