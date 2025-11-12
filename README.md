@@ -1,148 +1,147 @@
-# AI推敲 Chrome拡張 by Claude
+# AI推敲 Chrome Extension (WebLLM版)
 
-選択したテキストをローカルのClaude CLIを使って自動推敲するChrome拡張機能です。
+選択したテキストをブラウザ内で動作するLLMで推敲してくれるChrome拡張機能です。
+**ローカルサーバー不要！完全にブラウザ内で動作します。**
 
+## 特徴
 
-https://github.com/user-attachments/assets/f59a0a0a-0bc3-4527-a207-aaef4466dde5
-
+- 🚀 **サーバー不要** - WebLLMを使用してブラウザ内でLLMが動作
+- 🔒 **プライバシー保護** - テキストが外部に送信されない
+- 💰 **無料** - APIキー不要、課金なし
+- ⚡ **高速** - 一度モデルを読み込めば高速に動作
 
 ## 機能
 
-- ブラウザ上のテキストを選択して右クリック
-- 「AI推敲」メニューを選択
-- ローカルサーバー経由でClaude CLIが推敲
-- 結果をポップアップで表示
+- ブラウザ上で選択したテキストを右クリックメニューから「AI推敲」を選択
+- WebLLM（Llama-3.2-1B）がテキストを改善
+- 推敲結果に対して追加の指示や質問が可能
+- チャット形式でインタラクティブに対話
 
-## 構成
+## セットアップ
+
+### 1. 拡張機能のビルド
+
+```bash
+# extensionディレクトリに移動
+cd extension
+
+# 依存関係をインストール
+npm install
+
+# ビルド
+npm run build
+```
+
+### 2. Chrome拡張機能のインストール
+
+1. Chrome の設定メニューから「その他のツール」→「拡張機能」を開く
+2. 右上の「デベロッパーモード」をオンにする
+3. 「パッケージ化されていない拡張機能を読み込む」をクリック
+4. このプロジェクトの `extension/dist` フォルダを選択
+
+## 使い方
+
+1. ブラウザ上で推敲したいテキストを選択
+2. 右クリックして「AI推敲」を選択
+3. ポップアップウィンドウに結果が表示されます
+   - **初回起動時はモデルのダウンロードに数分かかります**
+4. 追加の指示や質問があれば、チャット欄に入力して送信
+
+## 開発
+
+### 開発モード
+
+```bash
+# ファイルの変更を監視して自動ビルド
+cd extension
+npm run dev
+```
+
+### ビルド
+
+```bash
+# 本番用ビルド
+cd extension
+npm run build
+```
+
+## プロジェクト構成
 
 ```
 chrome-extension-local-claude/
-├── server/                 # ローカルサーバー
-│   ├── package.json
-│   └── server.js          # Express + Claude CLI統合
-├── extension/             # Chrome拡張
-│   ├── manifest.json
-│   ├── background.js      # コンテキストメニュー制御
-│   ├── popup.html         # 結果表示UI
-│   ├── popup.js
+├── extension/              # Chrome拡張
+│   ├── src/               # ソースコード
+│   │   ├── background.js  # Service Worker（WebLLM統合）
+│   │   └── popup.js       # ポップアップUI
+│   ├── dist/              # ビルド済みファイル（自動生成）
+│   ├── manifest.json      # 拡張機能マニフェスト
+│   ├── popup.html         # ポップアップHTML
+│   ├── package.json       # npm設定
+│   ├── webpack.config.js  # Webpack設定
 │   └── icons/             # 拡張アイコン
 └── README.md
 ```
 
-## 必要な環境
+## 技術スタック
 
-- Node.js (v14以降)
-- Claude CLI（インストール済みであること）
-- Google Chrome
+- **Chrome Extension API** (Manifest V3)
+- **WebLLM** - ブラウザ内でLLMを動作させるライブラリ
+- **Llama-3.2-1B** - 軽量で高性能なLLMモデル
+- **Webpack** - バンドラー
 
-## セットアップ手順
+## システム要件
 
-### 1. Claude CLIのインストール確認
+- Google Chrome（最新版推奨）
+- 4GB以上のRAM（8GB推奨）
+- 2GB以上の空きストレージ（モデルキャッシュ用）
 
-```bash
-claude --version
-```
+## 注意事項
 
-Claude CLIがインストールされていない場合は、[公式ドキュメント](https://docs.anthropic.com/)を参照してインストールしてください。
-
-### 2. サーバーのセットアップ
-
-```bash
-# プロジェクトディレクトリに移動
-cd chrome-extension-local-claude
-
-# サーバーディレクトリに移動
-cd server
-
-# 依存パッケージをインストール
-npm install
-
-# サーバーを起動
-npm start
-```
-
-サーバーが `http://localhost:8080` で起動します。
-
-### 3. Chrome拡張のインストール
-
-1. Chromeを開く
-2. アドレスバーに `chrome://extensions/` と入力
-3. 右上の「デベロッパーモード」をONにする
-4. 「パッケージ化されていない拡張機能を読み込む」をクリック
-5. `extension`フォルダを選択
-
-### 4. アイコンの準備（オプション）
-
-`extension/icons/`ディレクトリに以下のアイコンファイルを配置してください：
-- `icon16.png` (16x16px)
-- `icon48.png` (48x48px)
-- `icon128.png` (128x128px)
-
-アイコンがなくても機能は動作しますが、見た目が改善されます。
-
-## 使い方
-
-1. ローカルサーバーを起動（`cd server && npm start`）
-2. Webページ上で推敲したいテキストを選択
-3. 右クリックして「AI推敲」を選択
-4. ポップアップが開いて推敲結果が表示される
-5. 「結果をコピー」ボタンで結果をクリップボードにコピー可能
+- 初回起動時はモデルのダウンロードに時間がかかります（約1GB）
+- モデルはブラウザにキャッシュされるため、2回目以降は高速に起動します
+- プライバシーを重視する場合やオフライン環境での使用に最適です
 
 ## トラブルシューティング
 
-### サーバーとの通信に失敗する
+### モデルの読み込みが遅い
+- 初回は時間がかかります。一度読み込めばキャッシュされます
+- Chrome DevToolsのコンソールで進捗を確認できます
 
-- サーバーが起動しているか確認: `http://localhost:8080/health` にアクセス
-- ポート8080が他のプロセスで使用されていないか確認
-- Chrome拡張の設定で `http://localhost:8080` へのアクセス許可が付与されているか確認
+### メモリ不足エラー
+- 他のタブを閉じてメモリを解放してください
+- より小さいモデルへの変更も検討してください
 
-### Claude CLIが動作しない
+### 拡張機能が動作しない
+- Chrome DevToolsのコンソールでエラーを確認
+- 拡張機能を再読み込み（chrome://extensions/）
+- ビルドが正しく完了しているか確認
 
-```bash
-# Claude CLIのパスを確認
-which claude
+## カスタマイズ
 
-# 手動でテストしてみる
-echo "テスト" | claude --dangerously-skip-permissions
+### 異なるモデルの使用
+
+`src/background.js`の以下の部分を編集して、別のモデルを使用できます：
+
+```javascript
+engine = await CreateMLCEngine(
+  "Llama-3.2-1B-Instruct-q4f16_1", // ここを変更
+  // 他のオプション例:
+  // "TinyLlama-1.1B-Chat-v1.0-q4f16_1"
+  // "Phi-3-mini-4k-instruct-q4f16_1"
+);
 ```
 
-### 推敲結果が表示されない
-
-- Chromeのデベロッパーツール（F12）を開いてエラーを確認
-- 拡張機能の「バックグラウンドページ」のコンソールをチェック
-- サーバーのターミナル出力を確認
-
-## 開発
-
-### サーバーの開発モード
-
-```bash
-cd server
-npm run dev  # nodemonで自動リロード
-```
-
-### Chrome拡張の更新
-
-1. コードを変更
-2. `chrome://extensions/` で拡張機能の「更新」ボタンをクリック
-3. Service Workerを再読み込み
-
-## セキュリティに関する注意
-
-- このツールは**ローカルネットワークのみ**で動作します
-- `--dangerously-skip-permissions`フラグを使用しているため、Claude CLIは自動的に実行されます
-- 機密情報を含むテキストの推敲には十分注意してください
-- 本番環境での使用は推奨されません
-
-## ライセンス
-
-MIT License
+利用可能なモデル: https://github.com/mlc-ai/web-llm#model-list
 
 ## 今後の改善案
 
-- [ ] 推敲スタイルの選択（丁寧、カジュアル、ビジネスなど）
-- [ ] 推敲履歴の保存
+- [ ] 複数のモデルから選択可能に
+- [ ] 推敲スタイルの選択（丁寧、カジュアル、ビジネス等）
+- [ ] 推敲履歴の保存機能
 - [ ] ダークモード対応
 - [ ] キーボードショートカット
-- [ ] 複数言語対応
-- [ ] エラーハンドリングの改善
+- [ ] オフライン完全対応の強化
+
+## ライセンス
+
+MIT
