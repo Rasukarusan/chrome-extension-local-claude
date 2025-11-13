@@ -92,7 +92,7 @@ ZZZZZZZZZ
 文章:
 ${selectedText}`;
 
-      // WebLLMに推敲を依頼
+      // WebLLMに推敲を依頼（ストリーミング）
       const response = await llm.chat.completions.create({
         messages: [
           {
@@ -107,26 +107,33 @@ ${selectedText}`;
         ],
         temperature: 0.7,
         max_tokens: 1000,
+        stream: true,  // ストリーミングを有効化
       });
 
-      const result = response.choices[0].message.content;
+      // ストリーミングレスポンスを処理
+      let result = "";
+      
+      for await (const chunk of response) {
+        const delta = chunk.choices[0]?.delta?.content || "";
+        result += delta;
+        
+        // リアルタイムで結果を更新
+        const messages = [
+          {
+            role: "user",
+            content: `以下の文章を推敲してください:\n${selectedText}`,
+          },
+          { role: "assistant", content: result },
+        ];
 
-      // 結果をメッセージ履歴として保存
-      const messages = [
-        {
-          role: "user",
-          content: `以下の文章を推敲してください:\n${selectedText}`,
-        },
-        { role: "assistant", content: result },
-      ];
-
-      await chrome.storage.local.set({
-        proofreadResult: result,
-        originalText: selectedText,
-        timestamp: Date.now(),
-        isLoading: false,
-        messages: messages,
-      });
+        await chrome.storage.local.set({
+          proofreadResult: result,
+          originalText: selectedText,
+          timestamp: Date.now(),
+          isLoading: false,
+          messages: messages,
+        });
+      }
     } catch (error) {
       console.error("Error with WebLLM:", error);
       await chrome.storage.local.set({
@@ -204,23 +211,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           messages: chatMessages,
           temperature: 0.7,
           max_tokens: 1000,
+          stream: true,  // ストリーミングを有効化
         });
 
-        const result = response.choices[0].message.content;
+        // ストリーミング開始前にユーザーメッセージを正式に追加
+        const baseMessages = [...messages, { role: "user", content: message }];
+        
+        // ストリーミングレスポンスを処理
+        let result = "";
+        
+        for await (const chunk of response) {
+          const delta = chunk.choices[0]?.delta?.content || "";
+          result += delta;
 
-        // ストレージから最新のメッセージ配列を取得
-        const storageData = await chrome.storage.local.get(["messages"]);
-        const currentMessages = storageData.messages || [];
+          // アシスタントの応答を含めたメッセージ配列を構築
+          const finalMessages = [...baseMessages, { role: "assistant", content: result }];
 
-        // ローディングメッセージを除外して、実際のレスポンスを追加
-        const finalMessages = currentMessages.filter((msg) => !msg.isLoading);
-        finalMessages.push({ role: "assistant", content: result });
-
-        // ストレージを更新
-        await chrome.storage.local.set({
-          messages: finalMessages,
-          timestamp: Date.now(),
-        });
+          // ストレージを更新
+          await chrome.storage.local.set({
+            messages: finalMessages,
+            timestamp: Date.now(),
+          });
+        }
 
         sendResponse({ success: true, result: result });
       } catch (error) {
