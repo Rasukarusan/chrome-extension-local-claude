@@ -1,12 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "AI推敲 by Claude",
+  "name": "AI推敲 by WebLLM",
   "version": "1.0.0",
-  "description": "選択したテキストをClaudeで推敲します",
+  "description": "選択したテキストをWebLLMで推敲します",
   "permissions": [
     "contextMenus",
     "storage"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
   "background": {
     "service_worker": "background.js"
   },
