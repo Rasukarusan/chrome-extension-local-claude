@@ -80,11 +80,17 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       const llm = await initializeEngine();
 
       // プロンプトを構築
-      const prompt = `以下の文章を推敲してください。より読みやすく、わかりやすい文章に改善してください：
+      const prompt = `以下の文章を推敲してください。修正点の列挙は不要です。出力例のように出力してください。
+出力例：
+【フォーマル】
+XXXXXXXXXX
+【カジュアル】
+YYYYYYYYYY
+【簡潔】
+ZZZZZZZZZ
 
-${selectedText}
-
-改善された文章：`;
+文章:
+${selectedText}`;
 
       // WebLLMに推敲を依頼
       const response = await llm.chat.completions.create({
@@ -92,7 +98,7 @@ ${selectedText}
           {
             role: "system",
             content:
-              "あなたは優秀な文章校正者です。与えられた文章をより良く改善してください。",
+              "あなたは優秀な文章校正者です。与えられた文章を【フォーマル】【カジュアル】【簡潔】の3つのパターンで推敲してください。",
           },
           {
             role: "user",
