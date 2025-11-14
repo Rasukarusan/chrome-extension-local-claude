@@ -18,7 +18,6 @@ module.exports = {
       patterns: [
         { from: 'manifest.json', to: 'manifest.json' },
         { from: 'popup.html', to: 'popup.html' },
-        { from: 'popup.css', to: 'popup.css' },
         { from: 'icons', to: 'icons' }
       ]
     })
@@ -32,7 +31,6 @@ module.exports = {
     }
   },
   experiments: {
-    topLevelAwait: true,
-    asyncWebAssembly: true
+    topLevelAwait: true
   }
 };
