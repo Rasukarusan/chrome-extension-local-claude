@@ -1,28 +1,28 @@
 // ポップアップが開かれた時に結果を表示
-document.addEventListener('DOMContentLoaded', async () => {
-  const contentDiv = document.getElementById('content');
+document.addEventListener("DOMContentLoaded", async() => {
+  const contentDiv = document.getElementById("content");
 
   // 初回読み込み
   await updateDisplay();
 
   // ストレージの変更を監視してリアルタイム更新
   chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'local') {
+    if (namespace === "local") {
       updateDisplay();
     }
   });
 
   // エンジンの初期化状態をチェック
-  chrome.runtime.sendMessage({ action: 'checkEngineStatus' }, (response) => {
+  chrome.runtime.sendMessage({ action: "checkEngineStatus" }, (response) => {
     if (response && !response.initialized && !response.initializing) {
-      console.log('[Popup] Engine not initialized, requesting initialization...');
+      console.log("[Popup] Engine not initialized, requesting initialization...");
     }
   });
 
   async function updateDisplay() {
     try {
       // ストレージから直接データを取得
-      const data = await chrome.storage.local.get(['proofreadResult', 'originalText', 'timestamp', 'isLoading', 'messages']);
+      const data = await chrome.storage.local.get(["proofreadResult", "originalText", "timestamp", "isLoading", "messages"]);
 
       // データがない場合
       if (!data.originalText) {
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      const {proofreadResult, originalText, timestamp, isLoading, messages} = data;
+      const { proofreadResult, originalText, timestamp, isLoading, messages } = data;
 
       // ローディング中の表示
       if (isLoading) {
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // 結果表示
-      const isError = proofreadResult && proofreadResult.startsWith('エラー:');
+      const isError = proofreadResult && proofreadResult.startsWith("エラー:");
 
       // 元のテキストセクション + チャット履歴
       contentDiv.innerHTML = `
@@ -74,72 +74,72 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 50);
 
       // チャット入力エリアを表示
-      const chatInputArea = document.getElementById('chatInputArea');
-      const chatInput = document.getElementById('chatInput');
-      const chatSendBtn = document.getElementById('chatSendBtn');
+      const chatInputArea = document.getElementById("chatInputArea");
+      const chatInput = document.getElementById("chatInput");
+      const chatSendBtn = document.getElementById("chatSendBtn");
 
       if (!isError && messages && chatInputArea) {
-        chatInputArea.style.display = 'block';
+        chatInputArea.style.display = "block";
 
         // チャット送信ボタンのイベントリスナー
         if (chatInput && chatSendBtn) {
-          const sendMessage = async () => {
+          const sendMessage = async() => {
             const message = chatInput.value.trim();
             if (!message) return;
 
             // 入力欄をクリア（即座に）
-            chatInput.value = '';
+            chatInput.value = "";
 
             // ユーザーメッセージとローディング表示をすぐにストレージに追加（即座に表示）
             const updatedMessages = [...messages,
-              { role: 'user', content: message },
-              { role: 'assistant', content: '考え中...', isLoading: true }
+              { role: "user", content: message },
+              { role: "assistant", content: "考え中...", isLoading: true },
             ];
             await chrome.storage.local.set({
               messages: updatedMessages,
-              timestamp: Date.now()
+              timestamp: Date.now(),
             });
 
             // ボタンを無効化
             chatSendBtn.disabled = true;
             chatInput.disabled = true;
-            chatSendBtn.textContent = '送信中...';
+            chatSendBtn.textContent = "送信中...";
 
             try {
               const response = await chrome.runtime.sendMessage({
-                action: 'sendChatMessage',
+                action: "sendChatMessage",
                 message: message,
                 messages: messages,
-                originalText: originalText
+                originalText: originalText,
               });
 
               if (response.success) {
                 // 成功時は何もしない（ストレージ更新で自動的にUIが更新される）
               } else {
-                alert('エラー: ' + (response.error || '送信に失敗しました'));
+                alert("エラー: " + (response.error || "送信に失敗しました"));
               }
             } catch (error) {
-              console.error('Failed to send message:', error);
-              alert('メッセージの送信に失敗しました');
+              console.error("Failed to send message:", error);
+              alert("メッセージの送信に失敗しました");
             } finally {
               chatSendBtn.disabled = false;
               chatInput.disabled = false;
-              chatSendBtn.textContent = '送信';
+              chatSendBtn.textContent = "送信";
             }
           };
 
-          chatSendBtn.addEventListener('click', sendMessage);
-          chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+          chatSendBtn.addEventListener("click", sendMessage);
+          chatInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
               sendMessage();
             }
           });
         }
       } else if (chatInputArea) {
-        chatInputArea.style.display = 'none';
+        chatInputArea.style.display = "none";
       }
     } catch (error) {
-      console.error('Error loading result:', error);
+      console.error("Error loading result:", error);
       contentDiv.innerHTML = `
         <div class="no-result">
           <p>結果の読み込みに失敗しました。</p>
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // HTMLエスケープ関数
 function escapeHtml(text) {
-  const div = document.createElement('div');
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
@@ -163,22 +163,22 @@ function renderAllMessages(messages, isError) {
     return `<div class="chat-message assistant">
       <div class="chat-message-role">AI (WebLLM)</div>
       <div class="chat-message-bubble" style="background-color: #ffebee; color: #c62828;">
-        ${escapeHtml(messages && messages[1] ? messages[1].content : 'エラーが発生しました')}
+        ${escapeHtml(messages && messages[1] ? messages[1].content : "エラーが発生しました")}
       </div>
     </div>`;
   }
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    return '<p style="text-align: center; color: #999; padding: 40px;">会話履歴がありません</p>';
+    return "<p style=\"text-align: center; color: #999; padding: 40px;\">会話履歴がありません</p>";
   }
 
   return messages.map((msg, index) => {
     // 最初のユーザーメッセージ（推敲依頼）はスキップ
-    if (index === 0 && msg.role === 'user') {
-      return '';
+    if (index === 0 && msg.role === "user") {
+      return "";
     }
 
-    const roleLabel = msg.role === 'user' ? 'あなた' : 'AI (WebLLM)';
+    const roleLabel = msg.role === "user" ? "あなた" : "AI (WebLLM)";
 
     // ローディング中の場合はスピナーを表示
     if (msg.isLoading) {
@@ -199,5 +199,5 @@ function renderAllMessages(messages, isError) {
         <div class="chat-message-bubble">${escapeHtml(msg.content)}</div>
       </div>
     `;
-  }).join('');
+  }).join("");
 }

@@ -54,7 +54,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 // コンテキストメニューがクリックされた時の処理
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+chrome.contextMenus.onClicked.addListener(async(info, tab) => {
   if (info.menuItemId === "ai-proofread") {
     const selectedText = info.selectionText;
 
@@ -80,15 +80,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       const llm = await initializeEngine();
 
       // プロンプトを構築
-      const prompt = `以下の文章を推敲してください。修正点の列挙は不要です。出力例のように出力してください。
-出力例：
-【フォーマル】
-XXXXXXXXXX
-【カジュアル】
-YYYYYYYYYY
-【簡潔】
-ZZZZZZZZZ
-
+      const prompt = `以下の文章を推敲してください。修正点の列挙は不要です。出力は【フォーマル】【カジュアル】【簡潔】の3パターンを出力してください。
 文章:
 ${selectedText}`;
 
@@ -112,11 +104,11 @@ ${selectedText}`;
 
       // ストリーミングレスポンスを処理
       let result = "";
-      
+
       for await (const chunk of response) {
         const delta = chunk.choices[0]?.delta?.content || "";
         result += delta;
-        
+
         // リアルタイムで結果を更新
         const messages = [
           {
@@ -160,7 +152,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   // チャットメッセージ送信ハンドラ
   if (request.action === "sendChatMessage") {
-    (async () => {
+    (async() => {
       try {
         const { message, messages, originalText } = request;
 
@@ -216,10 +208,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         // ストリーミング開始前にユーザーメッセージを正式に追加
         const baseMessages = [...messages, { role: "user", content: message }];
-        
+
         // ストリーミングレスポンスを処理
         let result = "";
-        
+
         for await (const chunk of response) {
           const delta = chunk.choices[0]?.delta?.content || "";
           result += delta;
