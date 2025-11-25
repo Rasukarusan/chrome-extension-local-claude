@@ -1,3 +1,5 @@
+import prettierConfig from "eslint-config-prettier";
+
 export default [
   {
     languageOptions: {
@@ -15,22 +17,8 @@ export default [
       },
     },
     rules: {
-      "indent": ["error", 2],
-      "linebreak-style": ["error", "unix"],
-      "quotes": ["error", "double"],
-      "semi": ["error", "always"],
-      "comma-dangle": ["error", "always-multiline"],
-      "no-trailing-spaces": "error",
-      "eol-last": ["error", "always"],
-      "object-curly-spacing": ["error", "always"],
-      "array-bracket-spacing": ["error", "never"],
-      "space-before-function-paren": ["error", "never"],
-      "keyword-spacing": ["error", {"before": true, "after": true}],
-      "space-infix-ops": "error",
-      "comma-spacing": ["error", {"before": false, "after": true}],
-      "brace-style": ["error", "1tbs"],
-      "no-multiple-empty-lines": ["error", {"max": 1}],
       "no-console": "off",
     },
   },
+  prettierConfig,
 ];
