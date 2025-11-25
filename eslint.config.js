@@ -1,0 +1,36 @@
+export default [
+  {
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        chrome: "readonly",
+        console: "readonly",
+        document: "readonly",
+        window: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+      },
+    },
+    rules: {
+      "indent": ["error", 2],
+      "linebreak-style": ["error", "unix"],
+      "quotes": ["error", "double"],
+      "semi": ["error", "always"],
+      "comma-dangle": ["error", "always-multiline"],
+      "no-trailing-spaces": "error",
+      "eol-last": ["error", "always"],
+      "object-curly-spacing": ["error", "always"],
+      "array-bracket-spacing": ["error", "never"],
+      "space-before-function-paren": ["error", "never"],
+      "keyword-spacing": ["error", {"before": true, "after": true}],
+      "space-infix-ops": "error",
+      "comma-spacing": ["error", {"before": false, "after": true}],
+      "brace-style": ["error", "1tbs"],
+      "no-multiple-empty-lines": ["error", {"max": 1}],
+      "no-console": "off",
+    },
+  },
+];
