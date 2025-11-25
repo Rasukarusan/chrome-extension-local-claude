@@ -3,10 +3,7 @@
   "name": "AI推敲 by WebLLM",
   "version": "1.0.0",
   "description": "選択したテキストをWebLLMで推敲します",
-  "permissions": [
-    "contextMenus",
-    "storage"
-  ],
+  "permissions": ["contextMenus", "storage"],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },

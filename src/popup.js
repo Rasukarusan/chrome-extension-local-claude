@@ -1,5 +1,5 @@
 // ポップアップが開かれた時に結果を表示
-document.addEventListener("DOMContentLoaded", async() => {
+document.addEventListener("DOMContentLoaded", async () => {
   const contentDiv = document.getElementById("content");
 
   // 初回読み込み
@@ -15,14 +15,22 @@ document.addEventListener("DOMContentLoaded", async() => {
   // エンジンの初期化状態をチェック
   chrome.runtime.sendMessage({ action: "checkEngineStatus" }, (response) => {
     if (response && !response.initialized && !response.initializing) {
-      console.log("[Popup] Engine not initialized, requesting initialization...");
+      console.log(
+        "[Popup] Engine not initialized, requesting initialization...",
+      );
     }
   });
 
   async function updateDisplay() {
     try {
       // ストレージから直接データを取得
-      const data = await chrome.storage.local.get(["proofreadResult", "originalText", "timestamp", "isLoading", "messages"]);
+      const data = await chrome.storage.local.get([
+        "proofreadResult",
+        "originalText",
+        "timestamp",
+        "isLoading",
+        "messages",
+      ]);
 
       // データがない場合
       if (!data.originalText) {
@@ -36,7 +44,8 @@ document.addEventListener("DOMContentLoaded", async() => {
         return;
       }
 
-      const { proofreadResult, originalText, timestamp, isLoading, messages } = data;
+      const { proofreadResult, originalText, timestamp, isLoading, messages } =
+        data;
 
       // ローディング中の表示
       if (isLoading) {
@@ -83,7 +92,7 @@ document.addEventListener("DOMContentLoaded", async() => {
 
         // チャット送信ボタンのイベントリスナー
         if (chatInput && chatSendBtn) {
-          const sendMessage = async() => {
+          const sendMessage = async () => {
             const message = chatInput.value.trim();
             if (!message) return;
 
@@ -91,7 +100,8 @@ document.addEventListener("DOMContentLoaded", async() => {
             chatInput.value = "";
 
             // ユーザーメッセージとローディング表示をすぐにストレージに追加（即座に表示）
-            const updatedMessages = [...messages,
+            const updatedMessages = [
+              ...messages,
               { role: "user", content: message },
               { role: "assistant", content: "考え中...", isLoading: true },
             ];
@@ -169,20 +179,21 @@ function renderAllMessages(messages, isError) {
   }
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    return "<p style=\"text-align: center; color: #999; padding: 40px;\">会話履歴がありません</p>";
+    return '<p style="text-align: center; color: #999; padding: 40px;">会話履歴がありません</p>';
   }
 
-  return messages.map((msg, index) => {
-    // 最初のユーザーメッセージ（推敲依頼）はスキップ
-    if (index === 0 && msg.role === "user") {
-      return "";
-    }
+  return messages
+    .map((msg, index) => {
+      // 最初のユーザーメッセージ（推敲依頼）はスキップ
+      if (index === 0 && msg.role === "user") {
+        return "";
+      }
 
-    const roleLabel = msg.role === "user" ? "あなた" : "AI (WebLLM)";
+      const roleLabel = msg.role === "user" ? "あなた" : "AI (WebLLM)";
 
-    // ローディング中の場合はスピナーを表示
-    if (msg.isLoading) {
-      return `
+      // ローディング中の場合はスピナーを表示
+      if (msg.isLoading) {
+        return `
         <div class="chat-message ${msg.role}">
           <div class="chat-message-role">${roleLabel}</div>
           <div class="chat-message-bubble" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
@@ -191,13 +202,14 @@ function renderAllMessages(messages, isError) {
           </div>
         </div>
       `;
-    }
+      }
 
-    return `
+      return `
       <div class="chat-message ${msg.role}">
         <div class="chat-message-role">${roleLabel}</div>
         <div class="chat-message-bubble">${escapeHtml(msg.content)}</div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 }
