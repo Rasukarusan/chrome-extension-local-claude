@@ -1,7 +1,11 @@
-const path = require('path');
-const CopyPlugin = require('copy-webpack-plugin');
+import path from 'path';
+import { fileURLToPath } from 'url';
+import CopyPlugin from 'copy-webpack-plugin';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default {
   mode: 'development',
   devtool: 'inline-source-map',
   entry: {
@@ -16,8 +20,8 @@ module.exports = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: 'manifest.json', to: 'manifest.json' },
-        { from: 'popup.html', to: 'popup.html' },
+        { from: 'src/manifest.json', to: 'manifest.json' },
+        { from: 'src/popup.html', to: 'popup.html' },
         { from: 'icons', to: 'icons' }
       ]
     })
