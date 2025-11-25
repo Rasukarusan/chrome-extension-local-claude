@@ -4,6 +4,12 @@ import { CreateMLCEngine } from "@mlc-ai/web-llm";
 let engine = null;
 let isInitializing = false;
 
+// thinkタグを削除するヘルパー関数
+function removeThinkTags(text) {
+  // <think>...</think>タグを削除（改行含む、ネストも考慮）
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+}
+
 // WebLLMエンジンを初期化
 async function initializeEngine() {
   if (engine || isInitializing) return engine;
@@ -13,9 +19,10 @@ async function initializeEngine() {
     console.log("[WebLLM] Initializing engine...");
 
     // 小さめのモデルを使用（ブラウザでの動作を考慮）
-    // 利用可能なモデル: https://github.com/mlc-ai/web-llm#model-list
+    // 利用可能なモデル: https://mlc.ai/models
     engine = await CreateMLCEngine(
-      "Qwen2.5-1.5B-Instruct-q4f32_1-MLC", // 最も軽量で安定したモデル
+      // 4GBぐらいあるので初回ロード時は時間がかかる
+      "Qwen3-8B-q4f16_1-MLC",
       {
         initProgressCallback: (progress) => {
           console.log("[WebLLM] Loading progress:", progress);
@@ -54,7 +61,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 // コンテキストメニューがクリックされた時の処理
-chrome.contextMenus.onClicked.addListener(async(info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "ai-proofread") {
     const selectedText = info.selectionText;
 
@@ -80,7 +87,14 @@ chrome.contextMenus.onClicked.addListener(async(info, tab) => {
       const llm = await initializeEngine();
 
       // プロンプトを構築
-      const prompt = `以下の文章を推敲してください。修正点の列挙は不要です。出力は【フォーマル】【カジュアル】【簡潔】の3パターンを出力してください。
+      const prompt = `/no_think。以下の文章を推敲してください。修正点の列挙は不要です。出力は【フォーマル】【カジュアル】【簡潔】の3パターンを日本語で出力してください。
+出力例：
+【フォーマル】
+xxxxxxx
+【カジュアル】
+yyyyyyy
+【簡潔】
+zzzzzzz
 文章:
 ${selectedText}`;
 
@@ -99,7 +113,7 @@ ${selectedText}`;
         ],
         temperature: 0.7,
         max_tokens: 1000,
-        stream: true,  // ストリーミングを有効化
+        stream: true, // ストリーミングを有効化
       });
 
       // ストリーミングレスポンスを処理
@@ -109,17 +123,20 @@ ${selectedText}`;
         const delta = chunk.choices[0]?.delta?.content || "";
         result += delta;
 
+        // thinkタグを削除してクリーンな結果を取得
+        const cleanResult = removeThinkTags(result);
+
         // リアルタイムで結果を更新
         const messages = [
           {
             role: "user",
             content: `以下の文章を推敲してください:\n${selectedText}`,
           },
-          { role: "assistant", content: result },
+          { role: "assistant", content: cleanResult },
         ];
 
         await chrome.storage.local.set({
-          proofreadResult: result,
+          proofreadResult: cleanResult,
           originalText: selectedText,
           timestamp: Date.now(),
           isLoading: false,
@@ -152,7 +169,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   // チャットメッセージ送信ハンドラ
   if (request.action === "sendChatMessage") {
-    (async() => {
+    (async () => {
       try {
         const { message, messages, originalText } = request;
 
@@ -203,7 +220,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           messages: chatMessages,
           temperature: 0.7,
           max_tokens: 1000,
-          stream: true,  // ストリーミングを有効化
+          stream: true, // ストリーミングを有効化
         });
 
         // ストリーミング開始前にユーザーメッセージを正式に追加
@@ -216,8 +233,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const delta = chunk.choices[0]?.delta?.content || "";
           result += delta;
 
+          // thinkタグを削除してクリーンな結果を取得
+          const cleanResult = removeThinkTags(result);
+
           // アシスタントの応答を含めたメッセージ配列を構築
-          const finalMessages = [...baseMessages, { role: "assistant", content: result }];
+          const finalMessages = [
+            ...baseMessages,
+            { role: "assistant", content: cleanResult },
+          ];
 
           // ストレージを更新
           await chrome.storage.local.set({
@@ -226,7 +249,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           });
         }
 
-        sendResponse({ success: true, result: result });
+        sendResponse({ success: true, result: cleanResult });
       } catch (error) {
         console.error("Error sending chat message:", error);
         sendResponse({ success: false, error: error.message });
